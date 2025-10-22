@@ -91,11 +91,12 @@ public class Main {
             byte[] data = new byte[readBuffer.remaining()];
 
             readBuffer.get(data);
-
-            System.out.println("Data received : "+ new String(data));
+            String str = new String(data);
+            System.out.println("Data received : "+ str);
 
             //Echo back
-            ByteBuffer writeBuffer = ByteBuffer.wrap(data);
+            String response = "+PONG\\r\\n";
+            ByteBuffer writeBuffer = ByteBuffer.wrap(response.getBytes());
             clientChannel.write(writeBuffer);
          }
 
