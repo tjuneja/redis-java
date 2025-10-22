@@ -1,3 +1,8 @@
+import server.RESPParser;
+import server.RedisCommandHandler;
+import server.RedisObject;
+import server.RedisSerializer;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -15,7 +20,7 @@ public class Main {
     ServerSocketChannel serverChannel;
     Selector selector;
     ByteBuffer readBuffer = ByteBuffer.allocate(1024);
-
+    RESPParser parser ;
     public void start(int port) throws IOException {
         setupServer(port);
     }
@@ -27,6 +32,7 @@ public class Main {
         serverChannel.bind(new InetSocketAddress(port));
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
         System.out.println("Server started on port : "+ port);
+        parser = new RESPParser();
         eventLoop();
     }
 
@@ -93,9 +99,10 @@ public class Main {
             readBuffer.get(data);
             String str = new String(data);
             System.out.println("Data received : "+ str);
+            RedisObject parsedCommand = parser.parse(str);
+            RedisObject protocolResponse = RedisCommandHandler.handle(parsedCommand);
+            String response = RedisSerializer.serialize(protocolResponse);
 
-            //Echo back
-            String response = "+PONG\r\n";
             ByteBuffer writeBuffer = ByteBuffer.wrap(response.getBytes());
             clientChannel.write(writeBuffer);
         }
@@ -116,6 +123,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         // You can use print statements as follows for debugging, they'll be visible when running tests.
+
         new Main().start(6379);
 
     }
