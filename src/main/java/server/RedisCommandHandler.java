@@ -1,5 +1,7 @@
 package server;
 
+import storage.Cache;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -24,6 +26,21 @@ public class RedisCommandHandler {
 
             case "PING" ->{
                 return new SimpleString("PONG");
+            }
+            case "SET" -> {
+                if(redisObjects.size() < 3)
+                    throw new IOException("SET command should have 2 arguments");
+                String key = ((BulkString)redisObjects.get(1)).getValueAsString();
+                String value = ((BulkString)redisObjects.get(2)).getValueAsString();
+                Cache.setValue(key, value.getBytes());
+                return new SimpleString("OK");
+            }
+            case "GET" -> {
+                if(redisObjects.size() < 2)
+                    throw new IOException("GET command should have at least 1 argument");
+                String key = ((BulkString)redisObjects.get(1)).getValueAsString();
+                byte[] value = Cache.getValue(key);
+                return new BulkString(value);
             }
             default -> throw new IOException("Unsupported command");
         }

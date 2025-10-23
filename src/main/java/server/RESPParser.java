@@ -146,6 +146,7 @@ public class RESPParser {
         String s2 = ":1000\r\n";
         String s3 = "$5\r\nhello\r\n";
         String s4 = "*2\r\n$5\r\nhello\r\n:42\r\n";
+        String s5 ="*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n";
 
         RESPParser parser = new RESPParser();
 
@@ -153,6 +154,8 @@ public class RESPParser {
         System.out.println(parser.parse(s2));
         System.out.println(parser.parse(s3));
         System.out.println(parser.parse(s4));
+        System.out.println(parser.parse(s5));
+
     }
 
 
