@@ -1,6 +1,6 @@
-package server;
+package types;
 
-public class SimpleString implements RedisObject{
+public class SimpleString implements RedisObject {
     private final String value;
     public SimpleString(String s){
         this.value = s;

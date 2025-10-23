@@ -1,8 +1,8 @@
-package server;
+package types;
 
 import java.util.List;
 
-public class Array implements RedisObject{
+public class Array implements RedisObject {
     private final List<RedisObject> elements;
 
     public Array(List<RedisObject> elements){

@@ -1,12 +1,10 @@
 import server.RESPParser;
 import server.RedisCommandHandler;
-import server.RedisObject;
+import types.RedisObject;
 import server.RedisSerializer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;

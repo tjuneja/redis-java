@@ -1,5 +1,8 @@
 package server;
 
+import types.*;
+import types.Error;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -147,6 +150,7 @@ public class RESPParser {
         String s3 = "$5\r\nhello\r\n";
         String s4 = "*2\r\n$5\r\nhello\r\n:42\r\n";
         String s5 ="*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n";
+        String s6 = "*5\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$5\r\nvalue\r\n$2\r\nEX\r\n$2\r\n10\r\n";
 
         RESPParser parser = new RESPParser();
 
@@ -155,6 +159,7 @@ public class RESPParser {
         System.out.println(parser.parse(s3));
         System.out.println(parser.parse(s4));
         System.out.println(parser.parse(s5));
+        System.out.println(parser.parse(s6));
 
     }
 

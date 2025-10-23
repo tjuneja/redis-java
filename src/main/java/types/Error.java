@@ -1,6 +1,6 @@
-package server;
+package types;
 
-public class Error implements RedisObject{
+public class Error implements RedisObject {
 
     private final String value;
 

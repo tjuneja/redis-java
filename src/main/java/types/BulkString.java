@@ -1,7 +1,7 @@
-package server;
+package types;
 
 import java.nio.charset.StandardCharsets;
-public class BulkString implements RedisObject{
+public class BulkString implements RedisObject {
     private final byte[] value;
 
 

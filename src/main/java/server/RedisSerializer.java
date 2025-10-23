@@ -1,5 +1,8 @@
 package server;
 
+import types.*;
+import types.Error;
+
 import java.nio.charset.StandardCharsets;
 
 public class RedisSerializer {
@@ -14,8 +17,8 @@ public class RedisSerializer {
     private static void appendObjects(StringBuilder sb, RedisObject obj) {
         if(obj instanceof SimpleString ss){
             sb.append('+').append(ss.getValue()).append("\r\n");
-        } else if (obj instanceof Error) {
-            Error e = (Error) obj;
+        } else if (obj instanceof types.Error) {
+            types.Error e = (Error) obj;
             sb.append("-").append(e.getValue()).append("\r\n");
         } else if (obj instanceof RedisInteger i) {
             sb.append(":").append(i.getValue()).append("\r\n");

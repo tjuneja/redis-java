@@ -1,6 +1,10 @@
 package server;
 
 import storage.Cache;
+import types.Array;
+import types.BulkString;
+import types.RedisObject;
+import types.SimpleString;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,7 +36,20 @@ public class RedisCommandHandler {
                     throw new IOException("SET command should have 2 arguments");
                 String key = ((BulkString)redisObjects.get(1)).getValueAsString();
                 String value = ((BulkString)redisObjects.get(2)).getValueAsString();
-                Cache.setValue(key, value.getBytes());
+                long ex =-1;
+                if(redisObjects.size()>3){
+                    String expiryKey = ((BulkString)redisObjects.get(3)).getValueAsString();
+                    if(expiryKey.equalsIgnoreCase("EX")
+                       // || expiryKey.equalsIgnoreCase("NX")
+                    ){
+                        String expiry = ((BulkString)redisObjects.get(4)).getValueAsString();
+                        if(expiry != null && !expiry.isEmpty()) ex = Long.parseLong(expiry)*1000;
+                    } else {
+                        String expiry = ((BulkString)redisObjects.get(4)).getValueAsString();
+                        if(expiry != null && !expiry.isEmpty()) ex = Long.parseLong(expiry);
+                    }
+                }
+                Cache.setValue(key, value.getBytes(), ex);
                 return new SimpleString("OK");
             }
             case "GET" -> {
