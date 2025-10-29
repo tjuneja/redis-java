@@ -1,5 +1,6 @@
 package storage;
 
+import java.awt.*;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -8,18 +9,28 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class Cache {
+public class RedisStore {
 
-    private static final Map<String, byte[]> map = new ConcurrentHashMap<>();
+    private static final Map<String, RedisValue> map = new ConcurrentHashMap<>();
     private static final Map<String, Long> expirationMap = new ConcurrentHashMap<>();
     private final static ScheduledExecutorService schedulerService = Executors.newScheduledThreadPool(1);
 
     static {
-        schedulerService.scheduleAtFixedRate(Cache::expireKeys, 100, 100, TimeUnit.MILLISECONDS);
+        schedulerService.scheduleAtFixedRate(RedisStore::expireKeys, 100, 100, TimeUnit.MILLISECONDS);
+    }
+
+
+    /**
+     * String operations
+     *
+     */
+
+    public static void set(String key, byte[] value){
+        setValue(key, value, -1);
     }
 
     public static void setValue(String key, byte[] value, long expiry){
-        map.put(key, value);
+        map.put(key, new RedisString(value));
 
         if(expiry > 0) expirationMap.put(key, System.currentTimeMillis() + expiry);
         else expirationMap.remove(key);
@@ -33,13 +44,55 @@ public class Cache {
             delete(key);
             return null;
         }
-        return map.get(key);
+        return ((RedisString)map.get(key)).getValue();
     }
 
     private static void delete(String key){
         map.remove(key);
         expirationMap.remove(key);
     }
+
+    /**
+     * List operations
+     */
+
+    public static RedisList getOrCreateList(String key){
+        RedisValue redisValue = map.get(key);
+
+        if(redisValue == null){
+            RedisList list = new RedisList();
+            map.put(key, list);
+            return list;
+        }
+
+        if(redisValue.isExpired()){
+            map.remove(key);
+            RedisList list = new RedisList();
+            map.put(key, list);
+            return list;
+        }
+
+        return (RedisList) redisValue;
+
+    }
+    public static RedisList getList(String key) {
+        RedisValue value = map.get(key);
+
+        if (value == null) return null;
+
+        if (value.isExpired()) {
+            delete(key);
+            return null;
+        }
+
+        if (value.getType() != RedisValue.RedisValueType.LIST) {
+            throw new IllegalArgumentException("WRONGTYPE Operation against a key holding the wrong kind of value");
+        }
+
+        return (RedisList) value;
+    }
+
+
 
     private static void expireKeys(){
         Set<String> deletionSet = new HashSet<>();
@@ -48,7 +101,7 @@ public class Cache {
                 deletionSet.add(entry);
             }
         }
-        deletionSet.forEach(Cache::delete);
+        deletionSet.forEach(RedisStore::delete);
     }
 
     private static boolean isExpired(String key) {

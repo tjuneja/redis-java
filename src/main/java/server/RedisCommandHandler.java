@@ -1,10 +1,8 @@
 package server;
 
-import storage.Cache;
-import types.Array;
-import types.BulkString;
-import types.RedisObject;
-import types.SimpleString;
+import storage.RedisList;
+import storage.RedisStore;
+import types.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,34 +30,60 @@ public class RedisCommandHandler {
                 return new SimpleString("PONG");
             }
             case "SET" -> {
-                if(redisObjects.size() < 3)
-                    throw new IOException("SET command should have 2 arguments");
-                String key = ((BulkString)redisObjects.get(1)).getValueAsString();
-                String value = ((BulkString)redisObjects.get(2)).getValueAsString();
-                long ex =-1;
-                if(redisObjects.size()>3){
-                    String expiryKey = ((BulkString)redisObjects.get(3)).getValueAsString();
-                    if(expiryKey.equalsIgnoreCase("EX")
-                       // || expiryKey.equalsIgnoreCase("NX")
-                    ){
-                        String expiry = ((BulkString)redisObjects.get(4)).getValueAsString();
-                        if(expiry != null && !expiry.isEmpty()) ex = Long.parseLong(expiry)*1000;
-                    } else {
-                        String expiry = ((BulkString)redisObjects.get(4)).getValueAsString();
-                        if(expiry != null && !expiry.isEmpty()) ex = Long.parseLong(expiry);
-                    }
-                }
-                Cache.setValue(key, value.getBytes(), ex);
-                return new SimpleString("OK");
+                return handSetOperation(redisObjects);
             }
             case "GET" -> {
-                if(redisObjects.size() < 2)
-                    throw new IOException("GET command should have at least 1 argument");
-                String key = ((BulkString)redisObjects.get(1)).getValueAsString();
-                byte[] value = Cache.getValue(key);
-                return new BulkString(value);
+                return handleGetOperation(redisObjects);
+            }
+            case "RPUSH" ->{
+                return handleRpush(redisObjects);
             }
             default -> throw new IOException("Unsupported command");
         }
+    }
+
+    private static RedisObject handleRpush(List<RedisObject> redisObjects) throws IOException {
+        if(redisObjects.size() <3)
+            throw new IOException("RPUSH should have atleast 3 argurments");
+
+        String key = ((BulkString)redisObjects.get(1)).getValueAsString();
+        byte[][] values = new byte[redisObjects.size() -2][];
+
+        for(int i = 2; i < redisObjects.size()-2;i++){
+            values[i-2] = ((BulkString)redisObjects.get(i)).getValue();
+        }
+        RedisList redisList = RedisStore.getOrCreateList(key);
+        int length = redisList.rpush(values);
+        return new RedisInteger(length);
+    }
+
+    private static BulkString handleGetOperation(List<RedisObject> redisObjects) throws IOException {
+        if(redisObjects.size() < 2)
+            throw new IOException("GET command should have at least 1 argument");
+        String key = ((BulkString) redisObjects.get(1)).getValueAsString();
+        byte[] value = RedisStore.getValue(key);
+        return new BulkString(value);
+    }
+
+    private static SimpleString handSetOperation(List<RedisObject> redisObjects) throws IOException {
+        if(redisObjects.size() < 3)
+            throw new IOException("SET command should have 2 arguments");
+        String key = ((BulkString) redisObjects.get(1)).getValueAsString();
+        String value = ((BulkString) redisObjects.get(2)).getValueAsString();
+        long ex =-1;
+        if(redisObjects.size()>3){
+            String expiryKey = ((BulkString) redisObjects.get(3)).getValueAsString();
+            if(expiryKey.equalsIgnoreCase("EX")
+               // || expiryKey.equalsIgnoreCase("NX")
+            ){
+                String expiry = ((BulkString) redisObjects.get(4)).getValueAsString();
+                if(expiry != null && !expiry.isEmpty()) ex = Long.parseLong(expiry)*1000;
+            } else {
+                String expiry = ((BulkString) redisObjects.get(4)).getValueAsString();
+                if(expiry != null && !expiry.isEmpty()) ex = Long.parseLong(expiry);
+            }
+        }
+        RedisStore.setValue(key, value.getBytes(), ex);
+        return new SimpleString("OK");
     }
 }
