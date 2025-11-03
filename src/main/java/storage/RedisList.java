@@ -81,4 +81,8 @@ public class RedisList implements RedisValue{
         }
         return list.size();
     }
+
+    public int size(){
+        return list.size();
+    }
 }

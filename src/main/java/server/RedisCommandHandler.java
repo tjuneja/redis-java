@@ -44,8 +44,20 @@ public class RedisCommandHandler {
             case "LPUSH" -> {
                 return handleLpush(redisObjects);
             }
+            case "LLEN" ->{
+                return listLength(redisObjects);
+            }
             default -> throw new IOException("Unsupported command");
         }
+    }
+
+    private static RedisObject listLength(List<RedisObject> redisObjects) throws IOException {
+        if (redisObjects.size() < 2)
+            throw new IOException("LLEN should have atleast 2 argurments");
+        String key  = ((BulkString)redisObjects.get(1)).getValueAsString();
+        RedisList redisList = RedisStore.getOrCreateList(key);
+        return new RedisInteger(redisList.size());
+
     }
 
     private static RedisObject handleLrange(List<RedisObject> redisObjects) throws IOException {
