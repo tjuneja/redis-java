@@ -31,10 +31,6 @@ public class RedisList implements RedisValue{
         }
         return list.size();
     }
-
-
-
-
     @Override
     public RedisValueType getType() {
         return RedisValueType.LIST;
@@ -79,4 +75,10 @@ public class RedisList implements RedisValue{
         return sb.toString();
     }
 
+    public int lpush(byte[] ...values) {
+        for (byte[] value: values){
+            list.addFirst(value);
+        }
+        return list.size();
+    }
 }
