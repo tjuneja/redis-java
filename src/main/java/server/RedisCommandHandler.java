@@ -38,8 +38,20 @@ public class RedisCommandHandler {
             case "RPUSH" ->{
                 return handleRpush(redisObjects);
             }
+            case "LRANGE" ->{
+                return handleLrange(redisObjects);
+            }
             default -> throw new IOException("Unsupported command");
         }
+    }
+
+    private static RedisObject handleLrange(List<RedisObject> redisObjects) throws IOException {
+        if (redisObjects.size() < 3)
+            throw new IOException("LRANGE should have atleast 4 argurments");
+        String key  = ((BulkString)redisObjects.get(1)).getValueAsString();
+        String start = ((BulkString)redisObjects.get(2)).getValueAsString();
+        String end = ((BulkString)redisObjects.get(3)).getValueAsString();
+        return RedisStore.getRange(key, start, end);
     }
 
     private static RedisObject handleRpush(List<RedisObject> redisObjects) throws IOException {
@@ -49,7 +61,8 @@ public class RedisCommandHandler {
         String key = ((BulkString)redisObjects.get(1)).getValueAsString();
         byte[][] values = new byte[redisObjects.size() -2][];
 
-        for(int i = 2; i < redisObjects.size()-2;i++){
+        for(int i = 2; i < redisObjects.size();i++){
+            System.out.println("Pushing element : "+  ((BulkString)redisObjects.get(i)).getValueAsString());
             values[i-2] = ((BulkString)redisObjects.get(i)).getValue();
         }
         RedisList redisList = RedisStore.getOrCreateList(key);

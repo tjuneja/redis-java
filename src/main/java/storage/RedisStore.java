@@ -1,9 +1,12 @@
 package storage;
 
+import types.Array;
+import types.BulkString;
+import types.RedisObject;
+
 import java.awt.*;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -109,5 +112,31 @@ public class RedisStore {
         System.out.println("Current time");
         if(expiryTime == null) return false;
         return System.currentTimeMillis() > expiryTime;
+    }
+
+    public static Array getRange(String key, String start, String end) {
+        RedisList redisList = getList(key);
+        System.out.println("Got redis list : "+ redisList);
+        if(redisList == null)
+            return new Array();
+
+        int startIdx,endIdx;
+        try {
+            startIdx = Integer.parseInt(start);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Start idx not a valid number");
+        }
+        try {
+            endIdx = Integer.parseInt(end);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("End index not a valid number");
+        }
+
+        List<byte[]> range = redisList.range(startIdx, endIdx);
+        List<RedisObject> objects = new ArrayList<>();
+        for (byte[] val:  range){
+            objects.add(new BulkString(val));
+        }
+        return new Array(objects);
     }
 }

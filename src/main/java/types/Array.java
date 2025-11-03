@@ -1,9 +1,14 @@
 package types;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Array implements RedisObject {
     private final List<RedisObject> elements;
+
+    public Array(){
+        this.elements = new ArrayList<>();
+    }
 
     public Array(List<RedisObject> elements){
         this.elements = elements;
@@ -18,6 +23,10 @@ public class Array implements RedisObject {
 
     public boolean isNull(){
         return elements == null;
+    }
+
+    public static ArrayList<RedisObject> of(){
+        return new ArrayList<>();
     }
 
     @Override

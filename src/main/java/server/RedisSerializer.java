@@ -38,7 +38,6 @@ public class RedisSerializer {
                 for(RedisObject redisObject: arr.getElements()) {
                     appendObjects(sb, redisObject);
                 }
-
             }
         }
     }
