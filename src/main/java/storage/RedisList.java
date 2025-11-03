@@ -85,4 +85,8 @@ public class RedisList implements RedisValue{
     public int size(){
         return list.size();
     }
+
+    public byte[] lpop(){
+        return list.pollFirst();
+    }
 }

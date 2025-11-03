@@ -47,8 +47,21 @@ public class RedisCommandHandler {
             case "LLEN" ->{
                 return listLength(redisObjects);
             }
+            case "LPOP" ->{
+                return handleLpop(redisObjects);
+            }
             default -> throw new IOException("Unsupported command");
         }
+    }
+
+    private static RedisObject handleLpop(List<RedisObject> redisObjects) throws IOException {
+        if (redisObjects.size() < 2)
+            throw new IOException("LPOP should have least 2 arguments");
+        String key  = ((BulkString)redisObjects.get(1)).getValueAsString();
+        RedisList redisList = RedisStore.getOrCreateList(key);
+        byte[] popped = redisList.lpop();
+        return new BulkString(popped);
+
     }
 
     private static RedisObject listLength(List<RedisObject> redisObjects) throws IOException {
