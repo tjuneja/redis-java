@@ -65,6 +65,8 @@ public class RedisCommandHandler {
             String startIdx = ((BulkString)redisObjects.get(2)).getValueAsString();
             int idx = Integer.parseInt(startIdx);
             List<byte[]> popped = redisList.lpop(idx);
+
+
             List<RedisObject> res = new ArrayList<>();
             for (byte[] elem : popped){
                 res.add(new BulkString(elem));
