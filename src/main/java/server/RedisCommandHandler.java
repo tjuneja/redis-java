@@ -5,6 +5,8 @@ import storage.RedisStore;
 import types.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RedisCommandHandler {
@@ -59,9 +61,19 @@ public class RedisCommandHandler {
             throw new IOException("LPOP should have least 2 arguments");
         String key  = ((BulkString)redisObjects.get(1)).getValueAsString();
         RedisList redisList = RedisStore.getOrCreateList(key);
-        byte[] popped = redisList.lpop();
-        return new BulkString(popped);
-
+        if(redisObjects.size() == 3){
+            String startIdx = ((BulkString)redisObjects.get(2)).getValueAsString();
+            int idx = Integer.parseInt(startIdx);
+            List<byte[]> popped = redisList.lpop(idx);
+            List<RedisObject> res = new ArrayList<>();
+            for (byte[] elem : popped){
+                res.add(new BulkString(elem));
+            }
+            return new Array(res);
+        }else{
+            byte[] popped = redisList.lpop();
+            return new BulkString(popped);
+        }
     }
 
     private static RedisObject listLength(List<RedisObject> redisObjects) throws IOException {

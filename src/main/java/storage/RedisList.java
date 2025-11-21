@@ -89,4 +89,22 @@ public class RedisList implements RedisValue{
     public byte[] lpop(){
         return list.pollFirst();
     }
+
+    public List<byte[]> lpop(int startIdx){
+        if(startIdx < 0){
+            throw new IllegalArgumentException("ERR value is out of range, must be positive");
+        }
+
+        if(startIdx == 0){
+            return List.of();
+        }
+        int count = Math.min(startIdx,list.size());
+        List<byte[]> res = new ArrayList<>(count);
+
+        for(int i = 0;i< startIdx;i++){
+            byte[] element = list.pollFirst();
+            if(element != null) res.add(element);
+        }
+        return res;
+    }
 }
