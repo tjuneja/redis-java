@@ -98,11 +98,13 @@ public class Main {
             String str = new String(data);
             System.out.println("Data received : "+ str);
             RedisObject parsedCommand = parser.parse(str);
-            RedisObject protocolResponse = RedisCommandHandler.handle(parsedCommand);
-            String response = RedisSerializer.serialize(protocolResponse);
+            RedisObject protocolResponse = RedisCommandHandler.handle(parsedCommand, clientChannel);
 
-            ByteBuffer writeBuffer = ByteBuffer.wrap(response.getBytes());
-            clientChannel.write(writeBuffer);
+            if(protocolResponse != null) {
+                String response = RedisSerializer.serialize(protocolResponse);
+                ByteBuffer writeBuffer = ByteBuffer.wrap(response.getBytes());
+                clientChannel.write(writeBuffer);
+            }
         }
 
     }

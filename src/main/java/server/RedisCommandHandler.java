@@ -5,12 +5,13 @@ import storage.RedisStore;
 import types.*;
 
 import java.io.IOException;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 public class RedisCommandHandler {
-    public static RedisObject handle(RedisObject parsedCommand) throws IOException {
+    public static RedisObject handle(RedisObject parsedCommand, SocketChannel channel) throws IOException {
         if(!(parsedCommand instanceof Array commands)) throw new IOException("Command should be an array");
 
         List<RedisObject> redisObjects = commands.getElements();
@@ -38,13 +39,20 @@ public class RedisCommandHandler {
                 return handleGetOperation(redisObjects);
             }
             case "RPUSH" ->{
-                return handleRpush(redisObjects);
+                RedisObject object = handleRpush(redisObjects);
+                String key = ((BulkString)redisObjects.get(1)).getValueAsString();
+                RedisStore.notifyListModified(key);
+                return object;
             }
             case "LRANGE" ->{
                 return handleLrange(redisObjects);
             }
             case "LPUSH" -> {
-                return handleLpush(redisObjects);
+                RedisObject object = handleLpush(redisObjects);
+                String key = ((BulkString)redisObjects.get(1)).getValueAsString();
+                RedisStore.notifyListModified(key);
+                return object;
+
             }
             case "LLEN" ->{
                 return listLength(redisObjects);
@@ -52,8 +60,50 @@ public class RedisCommandHandler {
             case "LPOP" ->{
                 return handleLpop(redisObjects);
             }
+
+            case "BLPOP" -> {
+                return handleBlpop(redisObjects, channel);
+            }
             default -> throw new IOException("Unsupported command");
         }
+    }
+
+    private static RedisObject handleBlpop(List<RedisObject> redisObjects, SocketChannel channel) throws IOException {
+        if(redisObjects.size() < 3){
+            throw new IOException("BLPOP should have least 3 arguments");
+        }
+        int timeout;
+
+        try {
+            String timeoutValue = ((BulkString)redisObjects.getLast()).getValueAsString();
+            timeout = Integer.parseInt(timeoutValue);
+
+            if(timeout < 0){
+                throw new IOException("Timeout value should be >= 0");
+            }
+        }catch (NumberFormatException e){
+            throw new IOException("Timeout value invalid");
+        }
+
+        List<String> keys = new ArrayList<>();
+
+        for (int i = 1; i <redisObjects.size()-1 ; i++) {
+            keys.add(((BulkString)redisObjects.get(i)).getValueAsString());
+        }
+
+        for (String key: keys){
+            byte[] value = RedisStore.lpopValue(key);
+            if(value != null){
+                List<RedisObject> response = Arrays.asList(
+                        new BulkString(key.getBytes()),
+                        new BulkString(value)
+                );
+                return new Array(response);
+            }
+        }
+
+        BlockingManager.getInstance().blockClient(channel, keys, timeout);
+        return new Array(null);
     }
 
     private static RedisObject handleLpop(List<RedisObject> redisObjects) throws IOException {

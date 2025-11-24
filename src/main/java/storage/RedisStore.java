@@ -1,10 +1,11 @@
 package storage;
 
+import server.BlockingManager;
 import types.Array;
 import types.BulkString;
 import types.RedisObject;
 
-import java.awt.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -95,6 +96,12 @@ public class RedisStore {
         return (RedisList) value;
     }
 
+    public static byte[] lpopValue(String key){
+        RedisList list = getList(key);
+        if(list == null) return null;
+        return list.lpop();
+    }
+
 
 
     private static void expireKeys(){
@@ -138,6 +145,10 @@ public class RedisStore {
             objects.add(new BulkString(val));
         }
         return new Array(objects);
+    }
+
+    public static void notifyListModified(String key) throws IOException {
+        BlockingManager.getInstance().notifyWhenKeyAvailable(key);
     }
 
 
