@@ -72,11 +72,11 @@ public class RedisCommandHandler {
         if(redisObjects.size() < 3){
             throw new IOException("BLPOP should have least 3 arguments");
         }
-        int timeout;
+        double timeout;
 
         try {
             String timeoutValue = ((BulkString)redisObjects.getLast()).getValueAsString();
-            timeout = Integer.parseInt(timeoutValue);
+            timeout = Double.parseDouble(timeoutValue);
 
             if(timeout < 0){
                 throw new IOException("Timeout value should be >= 0");

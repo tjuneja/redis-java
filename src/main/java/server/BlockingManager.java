@@ -63,7 +63,7 @@ public class BlockingManager {
         return INSTANCE;
     }
 
-    public void blockClient(SocketChannel channel, List<String> keys, int timeout){
+    public void blockClient(SocketChannel channel, List<String> keys, double timeout){
         BlockedClient client = new BlockedClient(channel, keys, timeout);
 
         for (String key: keys){
