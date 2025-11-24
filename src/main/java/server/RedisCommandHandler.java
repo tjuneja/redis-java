@@ -103,7 +103,7 @@ public class RedisCommandHandler {
         }
 
         BlockingManager.getInstance().blockClient(channel, keys, timeout);
-        return new Array(null);
+        return null;
     }
 
     private static RedisObject handleLpop(List<RedisObject> redisObjects) throws IOException {
