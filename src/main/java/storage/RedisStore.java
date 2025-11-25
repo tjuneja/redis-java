@@ -96,6 +96,14 @@ public class RedisStore {
         return (RedisList) value;
     }
 
+
+    public static RedisValue.RedisValueType getType (String key){
+        RedisValue value = map.get(key);
+        if(value != null)
+            return value.getType();
+        return null;
+    }
+
     public static byte[] lpopValue(String key){
         RedisList list = getList(key);
         if(list == null) return null;

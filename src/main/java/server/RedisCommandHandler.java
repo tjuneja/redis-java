@@ -2,6 +2,7 @@ package server;
 
 import storage.RedisList;
 import storage.RedisStore;
+import storage.RedisValue;
 import types.*;
 
 import java.io.IOException;
@@ -64,8 +65,20 @@ public class RedisCommandHandler {
             case "BLPOP" -> {
                 return handleBlpop(redisObjects, channel);
             }
+
+            case "TYPE" ->{
+                String key = ((BulkString)redisObjects.get(1)).getValueAsString();
+                return handleType(key, channel);
+            }
             default -> throw new IOException("Unsupported command");
         }
+    }
+
+    private static RedisObject handleType(String key, SocketChannel channel) {
+        RedisValue.RedisValueType type = RedisStore.getType(key);
+
+        if(type != null) return new SimpleString(type.toString().toLowerCase());
+        else return new SimpleString("none");
     }
 
     private static RedisObject handleBlpop(List<RedisObject> redisObjects, SocketChannel channel) throws IOException {

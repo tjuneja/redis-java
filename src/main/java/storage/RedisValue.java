@@ -9,7 +9,8 @@ public interface RedisValue {
         LIST,
         SET,
         HASH,
-        ZSET
+        ZSET,
+        STREAM
     }
 
 }
